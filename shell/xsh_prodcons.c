@@ -1,6 +1,7 @@
 /* xsh_prodcons.c - xsh_prodcons */
 
 #include <xinu.h>
+#include <stdio.h>
 #include <prodcons.h>
 
 /*------------------------------------------------------------------------
