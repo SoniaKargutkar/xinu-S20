@@ -52,12 +52,6 @@ shellcmd xsh_run(int nargs, char *args[])
       args++;
 			nargs--;
   }
-  else if(strncmp(args[1], "prodcons", 8) == 0) 
-  {
-     resume (create(xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
-     args++;
-		 nargs--;
- } 
   else if(strncmp(args[1], "prodcons_bb",13) == 0)
 		{
       printf("check");
@@ -65,6 +59,13 @@ shellcmd xsh_run(int nargs, char *args[])
 			nargs--;
 		resume (create(prodcons_bb, 4096, 20, "prodcons_bb", 2, nargs, args));
 		} 
+  else if(strncmp(args[1], "prodcons", 8) == 0) 
+  {
+     resume (create(xsh_prodcons, 4096, 20, "prodcons", 2, nargs, args));
+     args++;
+		 nargs--;
+ } 
+  
      }
 return (OK);
 }
