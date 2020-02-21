@@ -33,7 +33,7 @@ void producer_bb(int count)
 		wait(mutex);
 		arr_q[rear] = i;
 		rear = (rear+1)%5;
-		printf("name: producer[%d], write: %d\n", getpid(), i);
+		printf("producer name: producer[%d], write: %d\n", getpid(), i);
 		signal(mutex);
 		signal(empty);
 	}
