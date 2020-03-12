@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <future.h>
+#include <streamproc.h>
 
 shellcmd xsh_hello(int32, char *[]);
 shellcmd xsh_prodcons(int32, char *[]);
@@ -14,6 +15,8 @@ void prodcons_bb();
 void prodcons();
 
 void futures_test();
+
+int stream_proc();
 
 //semaphore declaration
 sid32 full, empty, mutex;
@@ -108,13 +111,16 @@ shellcmd xsh_run(int nargs, char *args[])
 		}
 		else if(strncmp(args[1], "futures_test", 12) == 0)
 		{
-			//printf("Here");
-			//code snippet for future prodcons snippet
 			args++;
 			nargs--;
-			//printf("%s",args[1]);
 			resume(create(futures_test, 4096, 20, "futures_test", 2, nargs, args));
 				
+		}
+		else if(strncmp(args[1], "tscdf", 5) == 0)
+		{
+			args++;
+			nargs--;
+			resume(create(stream_proc, 4096, 20, "stream_proc", 2, nargs, args));	
 		}
 	}
 }
