@@ -14,7 +14,7 @@ syscall future_get(
 {
 	intmask mask;
 	mask = disable();
-	
+
 	/*------------------------------------------------------------------------
 	 *  FUTURE_SHARED
 	 *------------------------------------------------------------------------
@@ -39,12 +39,12 @@ syscall future_get(
 			f->state = FUTURE_WAITING;
 			insert_in_getq(f, currpid);
 			suspend(currpid);
-			
+
 			/* resume operations */
 			*value = f->data;
 			f->state = FUTURE_EMPTY;
 		}
-		
+
 		/* If Queue is empty, send message */		
 		//if(isGetQueueEmpty(f)) {
 		//	send(main_pid, "Done!");
@@ -56,22 +56,37 @@ syscall future_get(
 	 *------------------------------------------------------------------------
 	 */
 	else if(f->mode == FUTURE_QUEUE) {
-		if(isSetQueueEmpty(f)) {
+		if(f->count == 0) {
 			insert_in_getq(f, currpid);
+			f->state = FUTURE_WAITING;
 			suspend(currpid);
-			
+
 			// after resumption
-			*value = f->data;
+			// *value = f->data[f->head];
+			char* headelemptr = f->data + (f->head * f->size);
+			// kprintf("\n******in get time %d,\n", f->data[f->head]);
+			// memcpy(value, f->data[f->head], sizeof(f->data[f->head]));
+			memcpy(value, headelemptr, f->size);
+			f->head = (f->head + 1) % f->max_elems;
+			f->count = f->count - 1;
+			f->state = FUTURE_EMPTY;
 		}
-		else {
-			resume(remove_from_setq(f));
-			
-			*value = f->data;
+		else{
+			// *value = f->data;
+			char* headelemptr = f->data + (f->head * f->size);
+			// memcpy(value, f->data[f->head], sizeof(f->data[f->head]));
+			memcpy(value, headelemptr, f->size);
+			f->head = (f->head + 1) % f->max_elems;
+			f->count = f->count - 1;
+			f->state = FUTURE_EMPTY;
+			// kprintf("\n inget->time %d\n", *value);
+			if(!isSetQueueEmpty(f))
+				resume(remove_from_setq(f));
 		}
 	} //end-if
-	
+
 	else {
-	
+
 		/*------------------------------------------------------------------------
 		 *  OTHERS
 		 *------------------------------------------------------------------------
@@ -88,7 +103,7 @@ syscall future_get(
 			/*block waiting for it to set and store pid */
 			f->pid = currpid;
 			f->state = FUTURE_WAITING;
-		
+
 			/* busy wait on the future */
 			while(1) {
 				if(f->state == FUTURE_READY) {
@@ -107,4 +122,4 @@ syscall future_get(
 
 	restore(mask);
 	return OK;
-}
+} 

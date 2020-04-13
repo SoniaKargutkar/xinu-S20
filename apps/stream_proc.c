@@ -29,6 +29,7 @@ void stream_consumer(int32 id, struct stream *skstr ){
         wait(skstr->mutex);
         qtime = skstr->queue[skstr->tail].time;
         qval = skstr->queue[skstr->tail].value;
+        
         tscdf_update(tc, skstr->queue[skstr->tail].time , skstr->queue[skstr->tail].value);
 
 
@@ -164,18 +165,20 @@ int stream_proc(int nargs, char* args[]) {
 
 
    time = (((clktime * 1000) + clkticks) - ((secs * 1000) + msecs));
-
+  //kprintf("time1 in ms: %u\n", time);
 
     for(i=0; i < num_streams; i++) {
         uint32 pm;
         pm = ptrecv(pcport);
         kprintf("process %d exited\n", pm);
+        kprintf("time2 in ms: %u\n", time);
 
     }
+    kprintf("time in ms: %u\n", time);
 
     ptdelete(pcport, 0);
 
-kprintf("time in ms: %u\n", time);
+
 
 
   return 0;
