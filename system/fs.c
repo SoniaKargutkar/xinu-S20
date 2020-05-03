@@ -224,6 +224,7 @@ int fs_open(char *filename, int flags)
     struct dirent *ent; 
     struct inode *i;
     int j;
+    int counter = 0;
 
     if (filename == NULL)
     {
@@ -242,7 +243,7 @@ int fs_open(char *filename, int flags)
     {
         // printf("checkpoint 3\n");
         f_desc = &(oft[i]);
-        //printf("\nchecking state: %d and name: %s\n", f_desc->state, f_desc->de->name);
+        printf("\nchecking state: %d and name: %s\n", f_desc->state, f_desc->de->name);
         // printf("\nchecking the fileName arg :%s\n\n", filename);
         if (strncmp(ent->name, f_desc->de->name, FILENAMELEN + 1) == 0)
         {
@@ -274,11 +275,26 @@ int fs_open(char *filename, int flags)
             f_desc->state = flags; 
             break;
         }
+        else
+        {
+          printf("checkpoint else:%d\n",j);
+          counter++;
+          printf("\nname of the file:%s and file searchinf for:%s\n",ent->name,filename);
+   
+        }
+        
     }
     if (ent == NULL) 
     {
         return SYSERR;
     }
+    printf("checking the counter:%d, numentries:%d\n", counter, r_dir->numentries);
+    if ((counter + 1) == r_dir->numentries)
+    {
+        printf("\n\n file with name %s does not exist\n", ent->name);
+        return SYSERR;
+    }
+    printf("checkpoint 5\n");
     return (next_open_fd - 1);
 }
 
