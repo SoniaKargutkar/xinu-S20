@@ -23,7 +23,7 @@ char block_cache[512];
 #define RT_BLK 2
 
 #define NUM_FD 16
-struct filetable oft[NUM_FD]; // open file table
+struct filetable oft[NUM_FD]; // opens the file table
 int next_open_fd = 0;
 
 
@@ -236,6 +236,25 @@ int fs_open(char *filename, int flags)
         return SYSERR;
     }
     r_dir = &(fsd.root_dir);
+
+
+    for (int i = 0; i < FILENAMELEN; i++)
+    {
+        // printf("checkpoint 3\n");
+        f_desc = &(oft[i]);
+        //printf("\nchecking state: %d and name: %s\n", f_desc->state, f_desc->de->name);
+        // printf("\nchecking the fileName arg :%s\n\n", filename);
+        if (strncmp(ent->name, f_desc->de->name, FILENAMELEN + 1) == 0)
+        {
+            // printf("fileName found in OFT\n\n");
+            if (f_desc->state == 1)
+            {
+                printf("\n\nFile already open \n");
+                return SYSERR;
+            }
+        }
+    }
+
     for (j = 0; j < r_dir->numentries; j++) 
     {
         ent = &(r_dir->entry[j]); 
@@ -471,12 +490,26 @@ int fs_write(int fd, void *buf, int nbytes)
 int fs_link(char *src_filename, char* dst_filename) {
   int i;
   struct inode in; 
-	struct filetable fd;
+	struct filetable *f_desc;
+
+      if (src_filename == NULL)
+    {
+        fprintf(stderr, "Incorrect file name\n");
+        return SYSERR;
+    }
+    if (strlen(src_filename) == 0)
+    {
+        fprintf(stderr, "Incorrect file name\n");
+        return SYSERR;
+    }
+
   for(i = 0; i < fsd.root_dir.numentries; i++) {
 	   if (strncmp(src_filename, fsd.root_dir.entry[i].name, FILENAMELEN+1) == 0) {
-         fd.de = &(fsd.root_dir.entry[fsd.root_dir.numentries++]);
-         (fd.de)->inode_num = fsd.root_dir.entry[i].inode_num;         
-				strcpy((fd.de)->name, dst_filename);
+         f_desc->de = &(fsd.root_dir.entry[fsd.root_dir.numentries++]);
+         (f_desc->de)->inode_num = fsd.root_dir.entry[i].inode_num;         
+				strcpy((f_desc->de)->name, dst_filename);
+        f_desc->state = FSTATE_CLOSED;
+        f_desc->flag = O_RDWR;
          fs_get_inode_by_num(0, fsd.root_dir.entry[i].inode_num, &in);  
 	   	  in.nlink = in.nlink+1;
          fs_put_inode_by_num(dev0, fsd.root_dir.entry[i].inode_num, &in);
@@ -489,18 +522,33 @@ int fs_link(char *src_filename, char* dst_filename) {
 int fs_unlink(char *filename) {
   int i,k;
   struct inode in;
+
+   // printf("\n\n ckecking fs unlink  \n");
+    if (filename == NULL)
+    {
+        fprintf(stderr, "Incorrect file name: File Name Null\n");
+        return SYSERR;
+    }
+    if (strlen(filename) == 0)
+    {
+        fprintf(stderr, "Incorrect file name\n");
+        return SYSERR;
+    }
+
   for(i = 0; i < fsd.root_dir.numentries; i++) {
     if (strncmp(filename, fsd.root_dir.entry[i].name, FILENAMELEN+1) == 0) {
       fs_get_inode_by_num(0, fsd.root_dir.entry[i].inode_num, &in);
+       strcpy(fsd.root_dir.entry[i].name, "");
+      fsd.root_dir.numentries = fsd.root_dir.numentries-1;
       if(in.nlink > 1) {
-        in.nlink = in.nlink--;
+        in.nlink = --in.nlink;
         fs_put_inode_by_num(dev0, fsd.root_dir.entry[i].inode_num, &in);
         return OK;
       }
       else if (in.nlink == 1) {
         //If the nlinks of the inode is just 1, then delete the respective data blocks as well.
-        int blockLength = sizeof(in.blocks)/sizeof(in.blocks[0]);
-        for(  k = 0;k<blockLength;k++){
+        
+        for(  k = 0;k<INODEBLOCKS;k++){
             fs_clearmaskbit(k);
         }
         fs_put_inode_by_num(dev0, fsd.root_dir.entry[i].inode_num, &in);
