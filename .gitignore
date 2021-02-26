@@ -53,3 +53,4 @@ compile/uboot-tool/mkimage
 
 # Debug files
 *.dSYM/
+=======

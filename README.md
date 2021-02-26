@@ -1,3 +1,4 @@
+
 # Welcome to Xinu
 
 # Build instructions
@@ -10,4 +11,6 @@ The PLATFORM variable should be set to one of:
 - arm-bbb
 - x86-qemu
 - x86-galileo
+=======
+
 
